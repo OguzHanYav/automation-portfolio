@@ -4,12 +4,6 @@
   "devCommand": "ng serve",
   "installCommand": "npm install",
   "framework": "angular",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/angular"
-    }
-  ],
   "rewrites": [
     {
       "source": "/(.*)",
