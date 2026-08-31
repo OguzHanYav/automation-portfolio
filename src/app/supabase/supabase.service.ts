@@ -11,7 +11,7 @@ export class SupabaseService {
   constructor() {
     this.client = createClient(
       environment.supabaseUrl,
-      environment.supabaseKey  // ← Hier war der Fehler (supabaseAnonKey → supabaseKey)
+      environment.supabaseKey  // ← Korrigiert: supabaseKey (nicht supabaseAnonKey)
     );
   }
 }
