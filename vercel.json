@@ -2,5 +2,11 @@
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist/automation-portfolio-dark-premium",
   "devCommand": "ng serve",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
