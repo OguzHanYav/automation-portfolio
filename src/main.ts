@@ -6,7 +6,6 @@ import { ProjectsComponent } from './app/pages/projects/projects.component';
 import { ProjectDetailComponent } from './app/pages/project-detail/project-detail.component';
 import { CrmComponent } from './app/pages/crm/crm.component';
 import { ContactComponent } from './app/pages/contact/contact.component';
-
 const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'projects', component: ProjectsComponent },
