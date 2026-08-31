@@ -1,13 +1,6 @@
 {
-  "buildCommand": "ng build --configuration=production",
+  "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist/automation-portfolio-dark-premium",
   "devCommand": "ng serve",
-  "installCommand": "npm install",
-  "framework": "angular",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  "installCommand": "npm install"
 }
