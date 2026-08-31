@@ -1,9 +1,9 @@
 import { Component, effect, inject } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { automationProjects } from '../../data/projects';
-import { ProjectCardComponent } from '../../components/project-card/project-card.component';
-import { LanguageService } from '../../i18n/language.service';
+import { automationProjects } from '@app/data/projects';
+import { ProjectCardComponent } from '@app/components/project-card/project-card.component';
+import { LanguageService } from '@app/i18n/language.service';
 
 @Component({
   selector: 'app-home',
@@ -17,7 +17,7 @@ import { LanguageService } from '../../i18n/language.service';
         <p class="hero-text">{{ i18n.t('home.text') }}</p>
 
         <div class="hero-actions">
-          <a routerLink="/crm" class="btn btn-primary">{{ i18n.t('home.tryDemoBtn') }}</a>
+          <a routerLink="/demo" class="btn btn-primary">{{ i18n.t('home.tryDemoBtn') }}</a>
           <a routerLink="/projects" class="btn btn-ghost">{{ i18n.t('home.exploreBtn') }}</a>
           <a routerLink="/contact" class="btn btn-ghost">{{ i18n.t('home.startBtn') }}</a>
         </div>
@@ -95,8 +95,6 @@ export class HomeComponent {
   metricValues = ['3+', '0', '100%'];
 
   constructor() {
-    // Bug fix: the browser tab title never reflected the page or the
-    // selected language. This keeps it in sync whenever the language changes.
     effect(() => {
       this.titleService.setTitle(`${this.i18n.t('home.pageTitle')} | Oguz Han Yavuz`);
     });
