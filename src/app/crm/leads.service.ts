@@ -12,6 +12,19 @@ export interface NewLeadInput {
   notes: string;
 }
 
+// Typ für die Leads-Tabelle
+interface LeadInsert {
+  name: string;
+  email: string;
+  phone: string | null;
+  notes: string | null;
+}
+
+interface LeadUpdate {
+  status?: LeadStatus;
+  notes?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class LeadsService implements OnDestroy {
   private supabase = inject(SupabaseService).client;
@@ -62,14 +75,16 @@ export class LeadsService implements OnDestroy {
   }
 
   async createLead(input: NewLeadInput): Promise<{ error: string | null }> {
+    const newLead: LeadInsert = {
+      name: input.name.trim(),
+      email: input.email.trim(),
+      phone: input.phone.trim() || null,
+      notes: input.notes.trim() || null
+    };
+
     const { error } = await this.supabase
       .from('leads')
-      .insert({
-        name: input.name.trim(),
-        email: input.email.trim(),
-        phone: input.phone.trim() || null,
-        notes: input.notes.trim() || null
-      } as any); // Temporärer Fix für Typfehler
+      .insert(newLead);
 
     if (error) {
       console.error('[LeadsService] createLead failed:', error);
@@ -81,9 +96,10 @@ export class LeadsService implements OnDestroy {
   async moveLead(id: string, status: LeadStatus): Promise<void> {
     this.leads.update((list) => list.map((lead) => (lead.id === id ? { ...lead, status } : lead)));
 
+    const update: LeadUpdate = { status };
     const { error } = await this.supabase
       .from('leads')
-      .update({ status } as any)
+      .update(update)
       .eq('id', id);
 
     if (error) {
@@ -93,9 +109,10 @@ export class LeadsService implements OnDestroy {
   }
 
   async updateNotes(id: string, notes: string): Promise<void> {
+    const update: LeadUpdate = { notes: notes.trim() || null };
     const { error } = await this.supabase
       .from('leads')
-      .update({ notes: notes.trim() || null } as any)
+      .update(update)
       .eq('id', id);
 
     if (error) {
