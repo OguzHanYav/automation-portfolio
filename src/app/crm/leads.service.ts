@@ -29,11 +29,37 @@ export class LeadsService implements OnDestroy {
 
   async fetchLeads(): Promise<void> {
     this.loading.set(true);
-    const { data, error } = await this.supabase.from('leads').select('*').order('created_at', { ascending: false });
+    const { data, error } = await this.supabase
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) {
       this.error.set(error.message);
       console.error('[LeadsService] fetchLeads failed:', error);
+      // Fallback: Mock-Daten, falls Supabase nicht erreichbar ist
+      this.leads.set([
+        {
+          id: 'mock-1',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          name: 'Anna Brandt',
+          email: 'anna@brandt-physio.de',
+          phone: '+491511234567',
+          status: 'NEW',
+          notes: 'Erster Kontakt per E-Mail'
+        },
+        {
+          id: 'mock-2',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          name: 'Mert Kaya',
+          email: 'mert@kaya-danisma.com',
+          phone: '+491522345678',
+          status: 'IN_PROGRESS',
+          notes: 'Angebot wurde versendet'
+        }
+      ]);
     } else {
       this.error.set(null);
       this.leads.set(data ?? []);
@@ -42,9 +68,6 @@ export class LeadsService implements OnDestroy {
   }
 
   private subscribeToChanges(): void {
-    // Realtime: jede Änderung (durch das öffentliche Formular, einen
-    // anderen geöffneten Tab, oder das Dashboard selbst) synchronisiert
-    // sich sofort — kein manuelles Neuladen nötig.
     this.channel = this.supabase
       .channel('leads-pipeline')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, () => {
@@ -62,47 +85,74 @@ export class LeadsService implements OnDestroy {
   }
 
   async createLead(input: NewLeadInput): Promise<{ error: string | null }> {
-    const { error } = await this.supabase.from('leads').insert({
-      name: input.name.trim(),
-      email: input.email.trim(),
-      phone: input.phone.trim() || null,
-      notes: input.notes.trim() || null
-      // status defaults to 'NEW' in der Datenbank
-    });
+    try {
+      const { error } = await this.supabase
+        .from('leads')
+        .insert({
+          name: input.name.trim(),
+          email: input.email.trim(),
+          phone: input.phone.trim() || null,
+          notes: input.notes.trim() || null
+        });
 
-    if (error) {
-      console.error('[LeadsService] createLead failed:', error);
-      return { error: error.message };
+      if (error) {
+        console.error('[LeadsService] createLead failed:', error);
+        return { error: error.message };
+      }
+      return { error: null };
+    } catch (err: any) {
+      console.error('[LeadsService] createLead exception:', err);
+      return { error: err.message || 'Unknown error' };
     }
-    // Kein manuelles fetchLeads() nötig — die Realtime-Subscription oben
-    // reagiert auf das INSERT-Event, sobald es committed ist.
-    return { error: null };
   }
 
   async moveLead(id: string, status: LeadStatus): Promise<void> {
-    // Optimistisches Update, damit sich die Verschiebung sofort anfühlt.
+    // Optimistisches Update
     this.leads.update((list) => list.map((lead) => (lead.id === id ? { ...lead, status } : lead)));
 
-    const { error } = await this.supabase.from('leads').update({ status }).eq('id', id);
-    if (error) {
-      console.error('[LeadsService] moveLead failed:', error);
-      // Bei Fehlschlag (z. B. RLS) synchronisiert die Realtime-Subscription
-      // bzw. der nächste fetchLeads() den echten Stand wieder zurück.
+    try {
+      const { error } = await this.supabase
+        .from('leads')
+        .update({ status })
+        .eq('id', id);
+
+      if (error) {
+        console.error('[LeadsService] moveLead failed:', error);
+        this.fetchLeads(); // Zurücksetzen auf echten Stand
+      }
+    } catch (err) {
+      console.error('[LeadsService] moveLead exception:', err);
       this.fetchLeads();
     }
   }
 
   async updateNotes(id: string, notes: string): Promise<void> {
-    const { error } = await this.supabase.from('leads').update({ notes: notes.trim() || null }).eq('id', id);
-    if (error) {
-      console.error('[LeadsService] updateNotes failed:', error);
+    try {
+      const { error } = await this.supabase
+        .from('leads')
+        .update({ notes: notes.trim() || null })
+        .eq('id', id);
+
+      if (error) {
+        console.error('[LeadsService] updateNotes failed:', error);
+      }
+    } catch (err) {
+      console.error('[LeadsService] updateNotes exception:', err);
     }
   }
 
   async deleteLead(id: string): Promise<void> {
-    const { error } = await this.supabase.from('leads').delete().eq('id', id);
-    if (error) {
-      console.error('[LeadsService] deleteLead failed (evtl. durch RLS blockiert):', error);
+    try {
+      const { error } = await this.supabase
+        .from('leads')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('[LeadsService] deleteLead failed:', error);
+      }
+    } catch (err) {
+      console.error('[LeadsService] deleteLead exception:', err);
     }
   }
 
