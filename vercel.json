@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build:vercel",
-  "outputDirectory": "dist/automation-portfolio-dark-premium",
+  "outputDirectory": "dist/automation-portfolio-dark-premium/browser",
   "devCommand": "ng serve",
   "installCommand": "npm install",
   "rewrites": [
