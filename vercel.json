@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build:vercel",
+  "buildCommand": "ng build --output-path=dist/automation-portfolio-dark-premium",
   "outputDirectory": "dist/automation-portfolio-dark-premium",
   "devCommand": "ng serve",
   "installCommand": "npm install"
