@@ -23,54 +23,47 @@ export class LeadsService implements OnDestroy {
   readonly error = signal<string | null>(null);
 
   constructor() {
+    console.log('[LeadsService] Initializing...');
     this.fetchLeads();
     this.subscribeToChanges();
   }
 
   async fetchLeads(): Promise<void> {
     this.loading.set(true);
-    const { data, error } = await this.supabase
-      .from('leads')
-      .select('*')
-      .order('created_at', { ascending: false });
+    console.log('[LeadsService] Fetching leads from Supabase...');
+    
+    try {
+      const { data, error } = await this.supabase
+        .from('leads')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      this.error.set(error.message);
-      console.error('[LeadsService] fetchLeads failed:', error);
-      // Fallback: Mock-Daten, falls Supabase nicht erreichbar ist
-      this.leads.set([
-        {
-          id: 'mock-1',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          name: 'Anna Brandt',
-          email: 'anna@brandt-physio.de',
-          phone: '+491511234567',
-          status: 'NEW',
-          notes: 'Erster Kontakt per E-Mail'
-        },
-        {
-          id: 'mock-2',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          name: 'Mert Kaya',
-          email: 'mert@kaya-danisma.com',
-          phone: '+491522345678',
-          status: 'IN_PROGRESS',
-          notes: 'Angebot wurde versendet'
-        }
-      ]);
-    } else {
+      if (error) {
+        console.error('[LeadsService] Supabase error:', error);
+        this.error.set(error.message);
+        this.loading.set(false);
+        this.leads.set([]); // Keine Mock-Daten, nur leeres Array
+        return;
+      }
+
+      console.log('[LeadsService] Fetched leads:', data?.length || 0);
       this.error.set(null);
       this.leads.set(data ?? []);
+      this.loading.set(false);
+      
+    } catch (err) {
+      console.error('[LeadsService] fetchLeads exception:', err);
+      this.error.set('Verbindungsfehler');
+      this.loading.set(false);
+      this.leads.set([]); // Keine Mock-Daten
     }
-    this.loading.set(false);
   }
 
   private subscribeToChanges(): void {
     this.channel = this.supabase
       .channel('leads-pipeline')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, () => {
+        console.log('[LeadsService] Realtime update received');
         this.fetchLeads();
       })
       .subscribe();
